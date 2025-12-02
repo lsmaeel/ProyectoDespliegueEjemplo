@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Mensajes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .nav {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #495057;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #e9ecef;
+        }
+
+        .nav-btn.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-logout {
+            background: #6c757d;
+            color: white;
+            margin-left: 10px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .card-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .user-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #apiUrlContainer {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        #apiUrlContainer input {
+            margin-top: 10px;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .pagination button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Gestión de Mensajes y Categorías</h1>
+            <p>Sistema de administración con autenticación JWT</p>
+        </div>
+
+        <div id="loginSection">
+            <div class="content">
+                <div id="apiUrlContainer">
+                    <label for="apiUrl"><strong>🌐 URL de tu API en Render:</strong></label>
+                    <input type="text" id="apiUrl" placeholder="https://tu-app.onrender.com" 
+                           value="http://localhost:8080">
+                    <p style="margin-top: 10px; color: #856404; font-size: 14px;">
+                        Por defecto está configurado para localhost. Si desplegaste en Render, 
+                        cambia la URL a tu dominio de Render.
+                    </p>
+                </div>
+
+                <h2>🔐 Iniciar Sesión</h2>
+                <div id="loginAlert"></div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginEmail">Email:</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Contraseña:</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                </form>
+
+                <hr style="margin: 30px 0;">
+
+                <h2>📝 Registrarse</h2>
+                <div id="registerAlert"></div>
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="registerEmail">Email:</label>
+                        <input type="email" id="registerEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Contraseña (mín. 3 caracteres):</label>
+                        <input type="password" id="registerPassword" required minlength="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerNombre">Nombre (opcional):</label>
+                        <input type="text" id="registerNombre">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerApellidos">Apellidos (opcional):</label>
+                        <input type="text" id="registerApellidos">
+                    </div>
+                    <button type="submit" class="btn btn-success">Registrarse</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="appSection" class="hidden">
+            <div class="nav">
+                <button class="nav-btn active" data-section="mensajes">📨 Mensajes</button>
+                <button class="nav-btn" data-section="categorias">📁 Categorías</button>
+                <button class="nav-btn" data-section="crear">➕ Crear Mensaje</button>
+            </div>
+
+            <div class="content">
+                <div class="user-info">
+                    <span id="userEmail"></span>
+                    <button class="btn btn-logout" onclick="logout()">Cerrar Sesión</button>
+                </div>
+
+                <!-- Sección de Mensajes -->
+                <div id="mensajes" class="section active">
+                    <h2>Lista de Mensajes</h2>
+                    <div id="mensajesAlert"></div>
+                    <div id="mensajesLoading" class="loading">Cargando mensajes...</div>
+                    <div id="mensajesList"></div>
+                    <div id="paginacion" class="pagination"></div>
+                </div>
+
+                <!-- Sección de Categorías -->
+                <div id="categorias" class="section">
+                    <h2>Lista de Categorías</h2>
+                    <div id="categoriasAlert"></div>
+                    
+                    <form id="crearCategoriaForm" style="margin-bottom: 30px;">
+                        <h3>Crear Nueva Categoría</h3>
+                        <div class="form-group">
+                            <label for="nombreCategoria">Nombre de la Categoría:</label>
+                            <input type="text" id="nombreCategoria" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Crear Categoría</button>
+                    </form>
+
+                    <div id="categoriasLoading" class="loading">Cargando categorías...</div>
+                    <div id="categoriasList"></div>
+                </div>
+
+                <!-- Sección de Crear Mensaje -->
+                <div id="crear" class="section">
+                    <h2>Crear Nuevo Mensaje</h2>
+                    <div id="crearAlert"></div>
+                    <form id="crearMensajeForm">
+                        <div class="form-group">
+                            <label for="mensajeTitulo">Título:</label>
+                            <input type="text" id="mensajeTitulo" required minlength="3" maxlength="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="mensajeTexto">Texto:</label>
+                            <textarea id="mensajeTexto" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="mensajeCategoria">Categoría:</label>
+                            <select id="mensajeCategoria" required>
+                                <option value="">Seleccione una categoría</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Crear Mensaje</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let token = null;
+        let currentPage = 0;
+        const pageSize = 5;
+
+        function getApiUrl() {
+            return document.getElementById('apiUrl').value.trim() || 'http://localhost:8080';
+        }
+
+        function showAlert(elementId, message, type) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => alertDiv.innerHTML = '', 5000);
+        }
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(`${getApiUrl()}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    token = data.token;
+                    document.getElementById('userEmail').textContent = `👤 ${email}`;
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('appSection').classList.remove('hidden');
+                    loadMensajes();
+                    loadCategorias();
+                    loadCategoriasSelect();
+                } else {
+                    showAlert('loginAlert', data.error || 'Error al iniciar sesión', 'error');
+                }
+            } catch (error) {
+                showAlert('loginAlert', 'Error de conexión con el servidor', 'error');
+            }
+        });
+
+        // Register
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const nombre = document.getElementById('registerNombre').value;
+            const apellidos = document.getElementById('registerApellidos').value;
+
+            try {
+                const response = await fetch(`${getApiUrl()}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, nombre, apellidos })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAlert('registerAlert', 'Usuario registrado correctamente. Ahora puedes iniciar sesión.', 'success');
+                    document.getElementById('registerForm').reset();
+                } else {
+                    showAlert('registerAlert', data.error || 'Error al registrar usuario', 'error');
+                }
+            } catch (error) {
+                showAlert('registerAlert', 'Error de conexión con el servidor', 'error');
+            }
+        });
+
+        // Logout
+        function logout() {
+            token = null;
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('appSection').classList.add('hidden');
+            document.getElementById('loginForm').reset();
+        }
+
+        // Navegación
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                
+                btn.classList.add('active');
+                const section = btn.getAttribute('data-section');
+                document.getElementById(section).classList.add('active');
+
+                if (section === 'mensajes') loadMensajes();
+                if (section === 'categorias') loadCategorias();
+            });
+        });
+
+        // Cargar mensajes paginados
+        async function loadMensajes(page = 0) {
+            currentPage = page;
+            document.getElementById('mensajesLoading').style.display = 'block';
+            document.getElementById('mensajesList').innerHTML = '';
+
+            try {
+                const response = await fetch(`${getApiUrl()}/mensajes/paginados?page=${page}&size=${pageSize}&sort=fechaCreacion,desc`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayMensajes(data.content);
+                    displayPagination(data);
+                } else {
+                    showAlert('mensajesAlert', 'Error al cargar mensajes', 'error');
+                }
+            } catch (error) {
+                showAlert('mensajesAlert', 'Error de conexión', 'error');
+            } finally {
+                document.getElementById('mensajesLoading').style.display = 'none';
+            }
+        }
+
+        function displayMensajes(mensajes) {
+            const list = document.getElementById('mensajesList');
+            
+            if (mensajes.length === 0) {
+                list.innerHTML = '<p>No hay mensajes disponibles</p>';
+                return;
+            }
+
+            list.innerHTML = mensajes.map(m => `
+                <div class="card">
+                    <h3>${m.titulo}</h3>
+                    <p><strong>Categoría:</strong> ${m.categoria?.nombreCategoria || 'Sin categoría'}</p>
+                    <p>${m.texto}</p>
+                    <p style="font-size: 12px; color: #999;">
+                        Creado: ${new Date(m.fechaCreacion).toLocaleString('es-ES')}
+                    </p>
+                    <div class="card-actions">
+                        <button class="btn btn-danger" onclick="deleteMensaje(${m.id})">
+                            🗑️ Eliminar
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayPagination(data) {
+            const pagination = document.getElementById('paginacion');
+            
+            pagination.innerHTML = `
+                <button onclick="loadMensajes(${currentPage - 1})" ${data.first ? 'disabled' : ''}>
+                    ← Anterior
+                </button>
+                <span>Página ${data.number + 1} de ${data.totalPages}</span>
+                <button onclick="loadMensajes(${currentPage + 1})" ${data.last ? 'disabled' : ''}>
+                    Siguiente →
+                </button>
+            `;
+        }
+
+        async function deleteMensaje(id) {
+            if (!confirm('¿Estás seguro de eliminar este mensaje?')) return;
+
+            try {
+                const response = await fetch(`${getApiUrl()}/mensajes/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    showAlert('mensajesAlert', 'Mensaje eliminado correctamente', 'success');
+                    loadMensajes(currentPage);
+                } else {
+                    showAlert('mensajesAlert', 'Error al eliminar (¿Necesitas rol ADMIN?)', 'error');
+                }
+            } catch (error) {
+                showAlert('mensajesAlert', 'Error de conexión', 'error');
+            }
+        }
+
+        // Cargar categorías
+        async function loadCategorias() {
+            document.getElementById('categoriasLoading').style.display = 'block';
+            document.getElementById('categoriasList').innerHTML = '';
+
+            try {
+                const response = await fetch(`${getApiUrl()}/categorias`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const categorias = await response.json();
+                    displayCategorias(categorias);
+                } else {
+                    showAlert('categoriasAlert', 'Error al cargar categorías', 'error');
+                }
+            } catch (error) {
+                showAlert('categoriasAlert', 'Error de conexión', 'error');
+            } finally {
+                document.getElementById('categoriasLoading').style.display = 'none';
+            }
+        }
+
+        function displayCategorias(categorias) {
+            const list = document.getElementById('categoriasList');
+            
+            if (categorias.length === 0) {
+                list.innerHTML = '<p>No hay categorías disponibles</p>';
+                return;
+            }
+
+            list.innerHTML = categorias.map(c => `
+                <div class="card">
+                    <h3>📁 ${c.nombreCategoria}</h3>
+                    <p>ID: ${c.id}</p>
+                    <div class="card-actions">
+                        <button class="btn btn-danger" onclick="deleteCategoria(${c.id})">
+                            🗑️ Eliminar
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function deleteCategoria(id) {
+            if (!confirm('¿Estás seguro de eliminar esta categoría?')) return;
+
+            try {
+                const response = await fetch(`${getApiUrl()}/categorias/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    showAlert('categoriasAlert', 'Categoría eliminada correctamente', 'success');
+                    loadCategorias();
+                    loadCategoriasSelect();
+                } else {
+                    showAlert('categoriasAlert', 'Error al eliminar categoría', 'error');
+                }
+            } catch (error) {
+                showAlert('categoriasAlert', 'Error de conexión', 'error');
+            }
+        }
+
+        // Crear categoría
+        document.getElementById('crearCategoriaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombreCategoria = document.getElementById('nombreCategoria').value;
+
+            try {
+                const response = await fetch(`${getApiUrl()}/categorias`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ nombreCategoria })
+                });
+
+                if (response.ok) {
+                    showAlert('categoriasAlert', 'Categoría creada correctamente', 'success');
+                    document.getElementById('crearCategoriaForm').reset();
+                    loadCategorias();
+                    loadCategoriasSelect();
+                } else {
+                    showAlert('categoriasAlert', 'Error al crear categoría', 'error');
+                }
+            } catch (error) {
+                showAlert('categoriasAlert', 'Error de conexión', 'error');
+            }
+        });
+
+        // Cargar categorías en el select
+        async function loadCategoriasSelect() {
+            try {
+                const response = await fetch(`${getApiUrl()}/categorias`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const categorias = await response.json();
+                    const select = document.getElementById('mensajeCategoria');
+                    select.innerHTML = '<option value="">Seleccione una categoría</option>' +
+                        categorias.map(c => `<option value="${c.id}">${c.nombreCategoria}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error al cargar categorías:', error);
+            }
+        }
+
+        // Crear mensaje
+        document.getElementById('crearMensajeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const titulo = document.getElementById('mensajeTitulo').value;
+            const texto = document.getElementById('mensajeTexto').value;
+            const categoria_id = document.getElementById('mensajeCategoria').value;
+
+            try {
+                const response = await fetch(`${getApiUrl()}/mensajes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ titulo, texto, categoria_id: parseInt(categoria_id) })
+                });
+
+                if (response.ok) {
+                    showAlert('crearAlert', 'Mensaje creado correctamente', 'success');
+                    document.getElementById('crearMensajeForm').reset();
+                } else {
+                    showAlert('crearAlert', 'Error al crear mensaje', 'error');
+                }
+            } catch (error) {
+                showAlert('crearAlert', 'Error de conexión', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
